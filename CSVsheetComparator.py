@@ -15,9 +15,10 @@ import sys
 from typing import Tuple, List, Dict, Optional
 
 parser = argparse.ArgumentParser(description="CSV comparator script - labels per row and have to be identical!")
-# TODO add colname pairs and label ColName pairs as parameters (make a batch programm)
 parser.add_argument("-f1", "--file1", type=str, required=True, help="Path of the file which gets compared to the second one")
 parser.add_argument("-f2", "--file2", type=str, required=True, help="Path of the file which is compared to the first one")
+parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True, help="name of the columns in which the labels are stored \nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
+parser.add_argument("-cp", "--colmnNamePairs", nargs="+", type=str, required=True, help="all pairs of columns which should be compared \nthey are inputted in the way: colNameFile1:::colNameFile2 nextPair nextPair ...")
 parser.add_argument("-v", "--verbose", action="store_true")
 
 args = parser.parse_args()
