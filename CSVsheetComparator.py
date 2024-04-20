@@ -9,7 +9,6 @@
 
 
 import csv
-import time
 import argparse
 import sys
 from typing import Tuple, List, Dict, Optional
@@ -18,7 +17,7 @@ parser = argparse.ArgumentParser(description="CSV comparator script - labels per
 parser.add_argument("-f1", "--file1", type=str, required=True, help="Path of the file which gets compared to the second one")
 parser.add_argument("-f2", "--file2", type=str, required=True, help="Path of the file which is compared to the first one")
 parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True, help="name of the columns in which the labels are stored \nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
-parser.add_argument("-cp", "--colmnNamePairs", nargs="+", type=str, required=True, help="all pairs of columns which should be compared \nthey are inputted in the way: colNameFile1:::colNameFile2 nextPair nextPair ...")
+parser.add_argument("-cp", "--columnNamePairs", nargs="+", type=str, required=True, help="all pairs of columns which should be compared \nthey are inputted in the way: colNameFile1:::colNameFile2 nextPair nextPair ...")
 parser.add_argument("-v", "--verbose", action="store_true")
 
 args = parser.parse_args()
@@ -31,7 +30,7 @@ def loadCSVcontent(path) -> List[str]:
         with open(path, newline="", encoding="UTF-8") as csvfile:
             csvreader = csv.reader(csvfile, delimiter=";")
             for row in csvreader:
-                if row: # checks rather row is empty or not
+                if any(field.strip() for field in row): # checks rather row is empty or not
                     content.append(row)
         return content
     except FileNotFoundError:
@@ -43,9 +42,14 @@ def loadCSVcontent(path) -> List[str]:
 file1Content = loadCSVcontent(args.file1)
 file2Content = loadCSVcontent(args.file2)
 
-print("################################################ FILE 1 CONTENT ####################################################")
+# DEBUG
+print("\n################################################ FILE 1 CONTENT ####################################################")
 print(file1Content)
-print("\n####################################################################################################################")
+print("####################################################################################################################")
+
+print("\n################################################ FILE 2 CONTENT ####################################################")
+print(file2Content)
+print("####################################################################################################################\n")
 
 # splits a columnNamePair (between "":::"")
 def splitPair(pair) -> List[str]:
@@ -94,39 +98,41 @@ while not is_LabelListFile1_SubSet:
         
 # build a intersection of 
 
+# DEBUG
 def printDic(dic):
-    for key, value in labelDicFile1.items():
+    for key, value in dic.items():
         print(key + ": " + str(value))
+    print("### END\n")
 
 printDic(labelDicFile1)
 printDic(labelDicFile2)
 
     
 def getColNamePairsFromUser() -> tuple[List[List[str]], Dict[str, int], Dict[str, int]]:
-    while True:
-        colPairs = []
-        userInput = input("provide all corresponding column name pairs in a way like: file1ColName1:::file2ColName1, file1ColName2:::file2ColName2, etc...\n")
-        pairs = userInput.split(sep=", ")
-        for string in pairs:
-            pair = string.split(sep=":::")
-            colPairs.append(pair)
-            
-        inputtedColNamesFile1 = [name[0] for name in colPairs]
-        inputtedColNamesFile2 = [name[1] for name in colPairs]
-        
-        try:
-            colNameDicFile1 = {name: file1Content[0].index(name) for name in inputtedColNamesFile1}
-            colNameDicFile2 = {name: file2Content[0].index(name) for name in inputtedColNamesFile2}
-            return colPairs, colNameDicFile1, colNameDicFile2
-        except ValueError:
-            print("some inputted pairs aren't valid!")
-        except Exception as e:
-            print(f"soemthing went wrong {e}")
+    # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
+    colPairs = []
+    for pair in args.columnNamePairs:
+        colPairs.append(splitPair(pair))
+    
+    # saves all Names of columns of one File inside a list per file
+    inputtedColNamesFile1 = [name[0] for name in colPairs]
+    inputtedColNamesFile2 = [name[1] for name in colPairs]
+    
+    try:
+        colNameDicFile1 = {name: file1Content[0].index(name) for name in inputtedColNamesFile1}
+        colNameDicFile2 = {name: file2Content[0].index(name) for name in inputtedColNamesFile2}
+        return colPairs, colNameDicFile1, colNameDicFile2
+    except ValueError:
+        print("some inputted pairs aren't valid!")
+    except Exception as e:
+        print(f"soemthing went wrong {e}")
 
 colPairs, colNameDicFile1, colNameDicFile2 = getColNamePairsFromUser()
 
 # This is the actual comparison of the corresponding values, it returns None if all vals are equal else it returns the position of the 
 # mismatched value
+#TODO optionale werte einfügen die ignoriert werden können beim vergleich und keinen Fehler zeigen sollen (bsp 9999 values!)
+#   kann gelöst werden in dem ein optionaler aparameter erstellt wird der beim starten des batch programms hinzugefügt wird!
 def compareValues() -> Dict[str, List[List[str]]]:
     wrongValuesCoordinates = {}
     for label in labelIntersection:
@@ -154,6 +160,9 @@ else:
         wrongValuesList = wrongValues.get(label)
         numberOfWrongValuesInLabel = len(wrongValuesList)
         for wrongValue in wrongValuesList:
+            # TODO we remove empty lines in the csv hence we canÄt give the exact coordinat as number (i.e. row num: / col num:)
+            # insted we have to give label number which equals row name and colName.
+            # TODO additionally we can give the exact value which is in file 1 and in file 2 so we can be sure we have the correct cell if we manually compare them in the original sheets
             print("#")
             print("#   >File 1:")
             print(f"#   \trow number:  {labelDicFile1.get(label) + 1}")
