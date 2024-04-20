@@ -31,7 +31,8 @@ def loadCSVcontent(path) -> List[str]:
         with open(path, newline="", encoding="UTF-8") as csvfile:
             csvreader = csv.reader(csvfile, delimiter=";")
             for row in csvreader:
-                content.append(row)
+                if row: # checks rather row is empty or not
+                    content.append(row)
         return content
     except FileNotFoundError:
         print(f"<<<<<<! the file {path} could not be found !>>>>>>")
@@ -46,22 +47,26 @@ print("################################################ FILE 1 CONTENT #########
 print(file1Content)
 print("\n####################################################################################################################")
 
-# returns labelList and dic of label: index in fileContent
+# splits a columnNamePair (between "":::"")
+def splitPair(pair) -> List[str]:
+    return pair.split(sep=":::")
+
+labelColumnNames = splitPair(args.labelColumnNamePair) # saves the names of the columns in which the labels are stored in a list (index 0 = colName File 1, index 1 0 colName File 2)
+
+# returns labelList and dic of {label: index of label in fileContent}
 def getColNameForLabelsFromUser(fileNumber, content) -> Tuple[List[str], Dict[str, int]]:
-    labelColFound = False
-    while not labelColFound:
-        userInput = input(f"how is the column of the {fileNumber} file called in which the labels are stored?\n")
-        try:
-            labelColIndex = content[0].index(userInput)
-            # A List of all labels WITHOUT the colName of the LabelCol
-            labelSet = set([row[labelColIndex] for row in content[1:]])
-            labelDic = {}
-            for index, label in enumerate(labelSet):
-                labelDic.update({label: index + 1}) # +1 because the colname is index 0 whch is missing in the label list
-            
-            return labelSet, labelDic
-        except ValueError:
-            print(f"<<<<<<! {userInput} is not contained in the provided file !>>>>>>")
+    columnNameForLabel = labelColumnNames[fileNumber - 1]
+    try:
+        labelColIndex = content[0].index(columnNameForLabel)
+        # A List of all labels WITHOUT the colName of the LabelCol
+        labelList = [row[labelColIndex] for row in content[1:]]
+        labelDic = {}
+        for index, label in enumerate(labelList):
+            labelDic.update({label: index + 1}) # +1 because the colname is index 0 whch is missing in the label list
+        
+        return set(labelList), labelDic
+    except ValueError:
+        print(f"<<<<<<! {columnNameForLabel} is not contained in file {fileNumber} !>>>>>>")
             
             
 ####### Für die Implementation dass er zwei Files vergelichen kann WO NICHT ALLE LABELS in beiden vorkommen (es also nur eine Schnittmenge gibt)
