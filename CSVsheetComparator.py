@@ -75,17 +75,20 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
             file1Value = file1Content[labelDicFile1.get(label)][colNameDicFile1.get(pair[0])]
             file2Value = file2Content[labelDicFile2.get(label)][colNameDicFile2.get(pair[1])]
             
+            file1ValueString = str(file1Value)
+            file2ValueString = str(file2Value)
+            
             # if the values are identical or are any value which the user said to ignore, we go to the next value
-            if file1Value == file2Value or str(file1Value) in ignoreValuesList or str(file2Value) in ignoreValuesList:
+            if file1Value == file2Value or file1ValueString in ignoreValuesList or file2ValueString in ignoreValuesList:
                 continue
             
             # if the values are not the same, they have to be diffrent which means we just check if label already has wrong Values, and if so append it to the dic in the corresponding label
             elif label in wrongValuesCoordinates: 
-                wrongValuesCoordinates.get(label).append([pair[0], pair[1]])
+                wrongValuesCoordinates.get(label).append([pair[0], file1ValueString, pair[1], file2ValueString])
                 
             #else we make a new key with the current label
             else:
-                wrongValuesCoordinates.update({label: [[pair[0], pair[1]]]})
+                wrongValuesCoordinates.update({label: [[pair[0], file1ValueString, pair[1], file2ValueString]]})
                 
     return wrongValuesCoordinates
 
@@ -122,7 +125,7 @@ def main():
     
     if labelSetFile1 != labelIntersection:
         print("<<<<<<! some of the labels in File1 may not exist in File2! (or typo) !>>>>>>")
-        userInput = input("do you want to continue either way? (y/n)")
+        userInput = input("do you want to continue either way? (y/n)\n")
         if userInput != "y":
             sys.exit(1)
             
@@ -142,23 +145,25 @@ def main():
         print("\n### all values are identical :D ###")
     else:
         print("\n<<<<<<! there is at least one wrong value !>>>>>>")
+        
         wrongValuesCounter = 0
+        
         for label in wrongValues.keys():
-            restString = 20 - len(label)
-            print("\n" + "#" * (restString//2) + f" wrong value was found while comparing label {label} " + "#" * (restString//2))
+            print("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17)
+            print("#")
+            print("#" + " " * ((65 - len(label))//2) + label)
+            
             wrongValuesList = wrongValues.get(label)
             numberOfWrongValuesInLabel = len(wrongValuesList)
+            
             for wrongValue in wrongValuesList:
-                # TODO we remove empty lines in the csv hence we canÄt give the exact coordinat as number (i.e. row num: / col num:)
-                # insted we have to give label number which equals row name and colName.
-                # TODO additionally we can give the exact value which is in file 1 and in file 2 so we can be sure we have the correct cell if we manually compare them in the original sheets
                 print("#")
                 print("#   >File 1:")
-                print(f"#   \trow number:  {labelDicFile1.get(label) + 1}")
                 print(f"#   \tcolumn Name: {wrongValue[0]}")
+                print(f"#   \t      value: {wrongValue[1]}")
                 print("#   >File 2:")
-                print(f"#   \trow number:  {labelDicFile2.get(label) + 1}")
-                print(f"#   \tcolumn Name: {wrongValue[1]}")
+                print(f"#   \tcolumn Name: {wrongValue[2]}")
+                print(f"#   \t      value: {wrongValue[3]}")
                 wrongValuesCounter += 1
                 numberOfWrongValuesInLabel -= 1
                 
@@ -167,7 +172,7 @@ def main():
                     print("#   ######################")
                 
             print("#")
-            print("#################################################################")
+            print("##################################################################")
             
         print(f"\n>>there are a total of {wrongValuesCounter} wrong Values\n")
 
