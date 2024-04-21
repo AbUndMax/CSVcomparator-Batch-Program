@@ -92,6 +92,32 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
                 
     return wrongValuesCoordinates
 
+# prints all found wrong values one after another
+def printWrongValues(wrongValues):
+    wrongValuesCounter = 0
+        
+    for label in wrongValues.keys():
+        print("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17)
+        print("#")
+        
+        wrongValuesList = wrongValues.get(label)
+        
+        for wrongValue in wrongValuesList:
+            print(f"#   ######################   {label}")
+            print("#")
+            print("#   >File 1:")
+            print(f"#   \tcolumn Name: {wrongValue[0]}")
+            print(f"#   \t      value: {wrongValue[1]}")
+            print("#   >File 2:")
+            print(f"#   \tcolumn Name: {wrongValue[2]}")
+            print(f"#   \t      value: {wrongValue[3]}")
+            print("#")
+            wrongValuesCounter += 1
+            
+        print("##################################################################")
+        
+    print(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n")
+
 def main():
     parser = argparse.ArgumentParser(description="CSV comparator script - labels per row and have to be identical!")
     parser.add_argument("-f1", "--file1", type=str, required=True, help="Path of the file which gets compared to the second one")
@@ -152,30 +178,8 @@ def main():
         print("\n### all values are identical :D ###")
     else:
         print("\n<<<<<<! there is at least one wrong value !>>>>>>")
+        printWrongValues(wrongValues)
         
-        wrongValuesCounter = 0
-        
-        for label in wrongValues.keys():
-            print("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17)
-            print("#")
-            
-            wrongValuesList = wrongValues.get(label)
-            
-            for wrongValue in wrongValuesList:
-                print(f"#   ######################   {label}")
-                print("#")
-                print("#   >File 1:")
-                print(f"#   \tcolumn Name: {wrongValue[0]}")
-                print(f"#   \t      value: {wrongValue[1]}")
-                print("#   >File 2:")
-                print(f"#   \tcolumn Name: {wrongValue[2]}")
-                print(f"#   \t      value: {wrongValue[3]}")
-                print("#")
-                wrongValuesCounter += 1
-                
-            print("##################################################################")
-            
-        print(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n")
 
 if __name__ == "__main__":
     main()
