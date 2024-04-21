@@ -106,6 +106,9 @@ def main():
             
     file1Content = loadCSVcontent(args.file1)
     file2Content = loadCSVcontent(args.file2)
+    
+    if args.verbose:
+        print("\n#v# CSV loading successful")
 
     if args.printDebugLines:
         print("\n################################################ FILE 1 CONTENT ####################################################")
@@ -123,6 +126,9 @@ def main():
     labelSetFile2, labelDicFile2 = getLabelSetAndDic(labelColumnNames, 2, file2Content)
     labelIntersection = labelSetFile1 & labelSetFile2
     
+    if args.verbose:
+        print("\n#v# Label Sets & Label Dictionarys loaded! - Label Intersection created")
+    
     if labelSetFile1 != labelIntersection:
         print("<<<<<<! some of the labels in File1 may not exist in File2! (or typo) !>>>>>>")
         userInput = input("do you want to continue either way? (y/n)\n")
@@ -137,7 +143,8 @@ def main():
     colNameDicFile1 = getColNameIndexDic(colPairs, file1Content, 1)
     colNameDicFile2 = getColNameIndexDic(colPairs, file2Content, 2)
     
-    print(colNameDicFile1)
+    if args.verbose:
+        print("\n#v# Column Name Dictionarys successfuly loaded!")
     
     wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2, args.ignoreValues)
                 
