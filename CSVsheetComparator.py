@@ -99,7 +99,7 @@ def main():
     parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True, help="name of the columns in which the labels are stored \nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
     parser.add_argument("-cp", "--columnNamePairs", nargs="+", type=str, required=True, help="all pairs of columns which should be compared \nthey are inputted in the way: colNameFile1:::colNameFile2 nextPair nextPair ...")
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str, help="optional Values which can occure in the files and should be ignored while comparing (e.g. Null, NONE, "" or 9999)")
-    # TODO add parameter for print out debug lines
+    parser.add_argument("-dbg", "--printDebugLines", action="store_true")
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -107,14 +107,14 @@ def main():
     file1Content = loadCSVcontent(args.file1)
     file2Content = loadCSVcontent(args.file2)
 
-    
-    print("\n################################################ FILE 1 CONTENT ####################################################")
-    print(file1Content)
-    print("####################################################################################################################")
+    if args.printDebugLines:
+        print("\n################################################ FILE 1 CONTENT ####################################################")
+        print(file1Content)
+        print("####################################################################################################################")
 
-    print("\n################################################ FILE 2 CONTENT ####################################################")
-    print(file2Content)
-    print("####################################################################################################################\n")        
+        print("\n################################################ FILE 2 CONTENT ####################################################")
+        print(file2Content)
+        print("####################################################################################################################\n")        
 
     labelColumnNames = splitPair(args.labelColumnNamePair) # saves the names of the columns in which the labels are stored in a list (index 0 = colName File 1, index 1 0 colName File 2)
 
@@ -151,12 +151,11 @@ def main():
         for label in wrongValues.keys():
             print("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17)
             print("#")
-            print("#" + " " * ((65 - len(label))//2) + label)
             
             wrongValuesList = wrongValues.get(label)
-            numberOfWrongValuesInLabel = len(wrongValuesList)
             
             for wrongValue in wrongValuesList:
+                print(f"#   ######################   {label}")
                 print("#")
                 print("#   >File 1:")
                 print(f"#   \tcolumn Name: {wrongValue[0]}")
@@ -164,17 +163,12 @@ def main():
                 print("#   >File 2:")
                 print(f"#   \tcolumn Name: {wrongValue[2]}")
                 print(f"#   \t      value: {wrongValue[3]}")
+                print("#")
                 wrongValuesCounter += 1
-                numberOfWrongValuesInLabel -= 1
                 
-                if numberOfWrongValuesInLabel != 0:
-                    print("#")
-                    print("#   ######################")
-                
-            print("#")
             print("##################################################################")
             
-        print(f"\n>>there are a total of {wrongValuesCounter} wrong Values\n")
+        print(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n")
 
 if __name__ == "__main__":
     main()
