@@ -28,7 +28,7 @@ There are 4 required parameters at startup and 3 optionals:
 ```
 
 which will result in a printout like this:
-```bash
+```
 <<<<<<! there is at least one wrong value !>>>>>>
 
 ################# wrong value(s) found in Label: #################
