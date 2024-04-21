@@ -70,7 +70,7 @@ def getColNamePairsFromUser(columnNamePairs, file1Content, file2Content) -> tupl
         print(f"soemthing went wrong {e}")
     
 # This is the actual comparison of the corresponding values, it returns None if all vals are equal else it returns the position of the mismatched value
-def compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2) -> Dict[str, List[List[str]]]:
+def compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2, ignoreValuesList) -> Dict[str, List[List[str]]]:
     wrongValuesCoordinates = {}
     for label in labelIntersection:
         for pair in colPairs:
@@ -78,7 +78,7 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
             file2Value = file2Content[labelDicFile2.get(label)][colNameDicFile2.get(pair[1])]
             
             # if the values are identical or are any value which the user said to ignore, we go to the next value
-            if file1Value == file2Value:
+            if file1Value == file2Value or str(file1Value) in ignoreValuesList or str(file2Value) in ignoreValuesList:
                 continue
             
             # if the values are not the same, they have to be diffrent which means we just check if label already has wrong Values, and if so append it to the dic in the corresponding label
@@ -97,6 +97,7 @@ def main():
     parser.add_argument("-f2", "--file2", type=str, required=True, help="Path of the file which is compared to the first one")
     parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True, help="name of the columns in which the labels are stored \nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
     parser.add_argument("-cp", "--columnNamePairs", nargs="+", type=str, required=True, help="all pairs of columns which should be compared \nthey are inputted in the way: colNameFile1:::colNameFile2 nextPair nextPair ...")
+    parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str, help="optional Values which can occure in the files and should be ignored while comparing (e.g. Null, NONE, "" or 9999)")
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -145,7 +146,7 @@ def main():
 
     colPairs, colNameDicFile1, colNameDicFile2 = getColNamePairsFromUser(args.columnNamePairs, file1Content, file2Content)
     
-    wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2)
+    wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2, args.ignoreValues)
                 
     if not wrongValues:
         print("\n### all values are identical :D ###")
