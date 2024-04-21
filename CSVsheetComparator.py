@@ -29,13 +29,14 @@ def loadCSVcontent(path) -> List[str]:
         sys.exit(1)
     except Exception as e:
         print(f"<<<<<<! An error occured: {e} !>>>>>>")
+        sys.exit(1)
             
 # splits a columnNamePair (between "":::"")
 def splitPair(pair) -> List[str]:
     return pair.split(sep=":::")
 
 # returns labelList and dic of {label: index of label in fileContent}
-def getColNameForLabelsFromUser(labelColumnNames, fileNumber, content) -> Tuple[List[str], Dict[str, int]]:
+def getLabelSetAndDic(labelColumnNames, fileNumber, content) -> Tuple[List[str], Dict[str, int]]:
     columnNameForLabel = labelColumnNames[fileNumber - 1]
     try:
         labelColIndex = content[0].index(columnNameForLabel)
@@ -46,28 +47,25 @@ def getColNameForLabelsFromUser(labelColumnNames, fileNumber, content) -> Tuple[
             labelDic.update({label: index + 1}) # +1 because the colname is index 0 whch is missing in the label list
         
         return set(labelList), labelDic
+    
     except ValueError:
         print(f"<<<<<<! {columnNameForLabel} is not contained in file {fileNumber} !>>>>>>")
-        
-# returns a Tuple with a List of all columnNamePairs, and two Dictionarys with {label: index in file1 or file2 content}
-def getColNamePairsFromUser(columnNamePairs, file1Content, file2Content) -> tuple[List[List[str]], Dict[str, int], Dict[str, int]]:
-    # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
-    colPairs = []
-    for pair in columnNamePairs:
-        colPairs.append(splitPair(pair))
-    
+        sys.exit(1)
+
+# returns a Dictionary with {label: index in header row of content}
+def getColNameIndexDic(colPairs, fileContent, fileNumber) -> Dict[str, int]:
     # saves all Names of columns of one File inside a list per file
-    inputtedColNamesFile1 = [name[0] for name in colPairs]
-    inputtedColNamesFile2 = [name[1] for name in colPairs]
-    
+    inputtedColNamesFile = [name[fileNumber - 1] for name in colPairs]
+
     try:
-        colNameDicFile1 = {name: file1Content[0].index(name) for name in inputtedColNamesFile1}
-        colNameDicFile2 = {name: file2Content[0].index(name) for name in inputtedColNamesFile2}
-        return colPairs, colNameDicFile1, colNameDicFile2
+        colNameDicFile = {name: fileContent[0].index(name) for name in inputtedColNamesFile}
+        return colNameDicFile
     except ValueError:
         print("some inputted pairs aren't valid!")
+        sys.exit(1)
     except Exception as e:
         print(f"soemthing went wrong {e}")
+        sys.exit(1)
     
 # This is the actual comparison of the corresponding values, it returns None if all vals are equal else it returns the position of the mismatched value
 def compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2, ignoreValuesList) -> Dict[str, List[List[str]]]:
@@ -98,6 +96,7 @@ def main():
     parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True, help="name of the columns in which the labels are stored \nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
     parser.add_argument("-cp", "--columnNamePairs", nargs="+", type=str, required=True, help="all pairs of columns which should be compared \nthey are inputted in the way: colNameFile1:::colNameFile2 nextPair nextPair ...")
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str, help="optional Values which can occure in the files and should be ignored while comparing (e.g. Null, NONE, "" or 9999)")
+    # TODO add parameter for print out debug lines
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -117,34 +116,25 @@ def main():
     labelColumnNames = splitPair(args.labelColumnNamePair) # saves the names of the columns in which the labels are stored in a list (index 0 = colName File 1, index 1 0 colName File 2)
 
     ## check if labelListFile1 is subset of labelListFile2
-    is_LabelListFile1_SubSet = False
-    while not is_LabelListFile1_SubSet:
-        labelSetFile1, labelDicFile1 = getColNameForLabelsFromUser(labelColumnNames, 1, file1Content)
-        labelSetFile2, labelDicFile2 = getColNameForLabelsFromUser(labelColumnNames, 2, file2Content)
-        labelIntersection = labelSetFile1 & labelSetFile2
-        
-        if labelSetFile1 != labelIntersection:
-            print("<<<<<<! some of the labels in File1 may not exist in File2! (or typo) !>>>>>>")
-            userInput = input("do you want to continue either way? (y/n)")
-            if userInput == "y":
-                is_LabelListFile1_SubSet = True
-            else:
-                continue
-        else:
-            is_LabelListFile1_SubSet = True
+    labelSetFile1, labelDicFile1 = getLabelSetAndDic(labelColumnNames, 1, file1Content)
+    labelSetFile2, labelDicFile2 = getLabelSetAndDic(labelColumnNames, 2, file2Content)
+    labelIntersection = labelSetFile1 & labelSetFile2
+    
+    if labelSetFile1 != labelIntersection:
+        print("<<<<<<! some of the labels in File1 may not exist in File2! (or typo) !>>>>>>")
+        userInput = input("do you want to continue either way? (y/n)")
+        if userInput != "y":
+            sys.exit(1)
             
-    # build a intersection of 
-
-    # DEBUG
-    def printDic(dic):
-        for key, value in dic.items():
-            print(key + ": " + str(value))
-        print("### END\n")
-
-    printDic(labelDicFile1)
-    printDic(labelDicFile2)
-
-    colPairs, colNameDicFile1, colNameDicFile2 = getColNamePairsFromUser(args.columnNamePairs, file1Content, file2Content)
+    # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
+    colPairs = []
+    for pair in args.columnNamePairs:
+        colPairs.append(splitPair(pair))
+            
+    colNameDicFile1 = getColNameIndexDic(colPairs, file1Content, 1)
+    colNameDicFile2 = getColNameIndexDic(colPairs, file2Content, 2)
+    
+    print(colNameDicFile1)
     
     wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2, colNameDicFile1, colNameDicFile2, args.ignoreValues)
                 
