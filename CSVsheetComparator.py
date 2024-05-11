@@ -203,15 +203,16 @@ def main():
         print("\n#v# Label Sets & Label Dictionary's loaded! - Label Intersection created")
 
     if labelSetFile1 != labelIntersection:
-        print("<<<<<<! some of the labels in File1 may not exist in File2! (or typo) !>>>>>>")
+        print("<<<<<<! some of the labels in File1 may not exist in File2 !>>>>>>")
         userInput = input("do you want to continue either way? (y/n)\n")
         if userInput != "y":
             sys.exit(1)
 
     # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
     try:
-        with open (args.columnNamePairs, "r") as colNamePairFile:
-            colPairs = [splitPair(pair.strip()) for pair in colNamePairFile]
+        with open(args.columnNamePairs, "r") as colNamePairFile:
+            # only split and append if the line is not empty (last if checks if line is empty
+            colPairs = [splitPair(pair.strip()) for pair in colNamePairFile if pair.strip()]
     except Exception as e:
         print(f"<<<<<<! An error occurred: {e} !>>>>>>")
         sys.exit(1)
