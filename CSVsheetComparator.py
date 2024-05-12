@@ -30,6 +30,7 @@ import csv
 import argparse
 import sys
 import os
+from datetime import datetime
 from typing import Tuple, List, Dict, Set
 
 
@@ -134,6 +135,7 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
     return wrongValuesCoordinates
 
 
+# prints the given string to the console or to a file
 def output(string, file=None):
     if file:
         file.write(string + "\n")
@@ -169,21 +171,30 @@ def printWrongValues(wrongValues, file=None):
     output(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n", file)
 
 
+# saves the wrong values to a txt file
 def saveToTXT(dirPath, wrongValues):
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
     try:
         if os.path.isdir(dirPath):
-            filePath = dirPath + "/WrongValues.txt"
+            filePath = dirPath + f"/WrongValues_{timestamp}.txt"
             with open(filePath, "w") as file:
                 printWrongValues(wrongValues, file)
+
     except Exception as e:
         print(f"<<<<<<! ERROR: could not write as TXT: {e} !>>>>>>")
         sys.exit(1)
 
+    print("\nsuccessfully saved as TXT to: " + dirPath + f"/WrongValues_{timestamp}.txt")
 
+
+# saves the wrong values to a csv file
 def saveToCSV(dirPath, wrongValues, colPairs):
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
     try:
         if os.path.isdir(dirPath):
-            filePath = dirPath + "/WrongValues.csv"
+            filePath = dirPath + f"/WrongValues_{timestamp}.csv"
             with open(filePath, "w", newline="") as file:
                 writer = csv.writer(file, delimiter=";")
 
@@ -206,6 +217,8 @@ def saveToCSV(dirPath, wrongValues, colPairs):
     except Exception as e:
         print(f"<<<<<<! ERROR: could not write as CSV: {e} !>>>>>>")
         sys.exit(1)
+
+    print("\nsuccessfully saved as CSV to: " + dirPath + f"/WrongValues_{timestamp}.csv")
 
 
 def main():
@@ -251,8 +264,7 @@ def main():
     labelSetFile2, labelDicFile2 = getLabelSetAndDic(labelColumnNames, 2, file2Content)
     labelIntersection = labelSetFile1 & labelSetFile2
 
-    if args.verbose:
-        print("\n#v# Label Sets & Label Dictionary's loaded! - Label Intersection created")
+    if args.verbose: print("\n#v# Label Sets & Label Dictionary's loaded! - Label Intersection created")
 
     if labelSetFile1 != labelIntersection:
         print("<<<<<<! some of the labels in File1 may not exist in File2 !>>>>>>")
@@ -269,14 +281,17 @@ def main():
         print(f"<<<<<<! An error occurred: {e} !>>>>>>")
         sys.exit(1)
 
+    if args.verbose: print("\n#v# column pairs successfully loaded!")
+
     colNameDicFile1 = getColNameIndexDic(colPairs, file1Content, 1)
     colNameDicFile2 = getColNameIndexDic(colPairs, file2Content, 2)
 
-    if args.verbose:
-        print("\n#v# Column Name Dictionary's successfully loaded!")
+    if args.verbose: print("\n#v# Column Name Dictionary's successfully loaded!")
 
     wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2,
                                 colNameDicFile1, colNameDicFile2, ignoreValues)
+
+    if args.verbose: print("\n#v# comparison of values successful!")
 
     if not wrongValues:
         print("\n### all values are identical :D ###")
