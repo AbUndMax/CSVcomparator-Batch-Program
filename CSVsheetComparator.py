@@ -1,4 +1,4 @@
-# This Script is used to compare two CSV UTF-8 files with ; seperation by checking,
+# This Script is used to compare two CSV UTF-8 files with ; separation by checking,
 # if the data of a label "x" in row name "x-row" in File 1
 # is the same data of in a second File 2 in column "y" with row name "y-row" !
 
@@ -11,13 +11,20 @@
 # The program will then iterate over all labels that are shared in booth Label columns and then compare the values
 # of File 1 in "colNameFile1" with the values of File 2 in "colNameFile2" for each label.
 
+# The user can also input a list of values which should be ignored while comparing the values.
+
+# It is also possible to save the console output to a .txt or writing the wrong values found to a csv file
+# by providing a path to a directory in which the files should be saved as arguments to -st and -sc.
+
 # The script is used with the following command:
 # python3 CSVsheetComparator.py
 # -f1 "pathToFile1"
 # -f2 "pathToFile2"
-# -lp "colNameForLabelsFile1:::colNameForLabelFile2"
+# -lp colNameForLabelsFile1:::colNameForLabelFile2
 # -cp "pathToColumnPairs.txt"
-# -iv "optionalValuesToIgnore"
+# -iv valuesToIgnore
+# -st "pathToDirectoryToSaveTXT"
+# -sc "pathToDirectoryToSaveCSV"
 
 import csv
 import argparse
@@ -34,7 +41,7 @@ def loadCSVcontent(path) -> List[List[str]]:
         with open(path, newline="", encoding="UTF-8-sig") as csvfile:
             csvreader = csv.reader(csvfile, delimiter=";")
             for row in csvreader:
-                if any(field.strip() for field in row): # checks rather row is empty or not
+                if any(field.strip() for field in row):  # checks rather row is empty or not
                     content.append(row)
         return content
     except FileNotFoundError:
@@ -59,7 +66,7 @@ def getLabelSetAndDic(labelColumnNames, fileNumber, content) -> Tuple[Set[str], 
         labelList = [row[labelColIndex] for row in content[1:]]
         labelDic = {}
         for index, label in enumerate(labelList):
-            labelDic.update({label: index + 1}) # +1 because the colName is index 0 which is missing in the label list
+            labelDic.update({label: index + 1})  # +1 because the colName is index 0 which is missing in the label list
 
         return set(labelList), labelDic
 
@@ -87,12 +94,17 @@ def getColNameIndexDic(colPairs, fileContent, fileNumber) -> Dict[str, int]:
         sys.exit(1)
 
 
-# This is the actual comparison of the corresponding values, it returns None if all vals are equal else it returns
-# the position of the mismatched value
+# This is the actual comparison of the corresponding values,
+# it returns None if all vals are equal
+# else it returns a dic with {label: the position of the mismatched values}
 def compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2,
                   colNameDicFile1, colNameDicFile2, ignoreValuesList) -> Dict[str, List[List[str]]]:
     wrongValuesCoordinates = {}
     for label in labelIntersection:
+
+        wrongValuesCoordinates.update({label: []})
+        noWrongValue = True
+
         for pair in colPairs:
             file1Value = file1Content[labelDicFile1.get(label)][colNameDicFile1.get(pair[0])]
             file2Value = file2Content[labelDicFile2.get(label)][colNameDicFile2.get(pair[1])]
@@ -109,16 +121,15 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
 
             # if the values are identical or are any value which the user said to ignore, we go to the next value
             if file1Value == file2Value or file1ValueString in ignoreValuesList or file2ValueString in ignoreValuesList:
-                continue
+                wrongValuesCoordinates.get(label).append(None)
 
-            # if the values are not the same, they have to be different which means we just check if label already has
-            # wrong Values, and if so append it to the dic in the corresponding label
-            elif label in wrongValuesCoordinates:
-                wrongValuesCoordinates.get(label).append([pair[0], file1ValueString, pair[1], file2ValueString])
-
-            # else we make a new key with the current label
+            # if the values are not the same, we append the column names and the wrong values to the dic
             else:
-                wrongValuesCoordinates.update({label: [[pair[0], file1ValueString, pair[1], file2ValueString]]})
+                wrongValuesCoordinates.get(label).append([pair[0], file1ValueString, pair[1], file2ValueString])
+                noWrongValue = False
+
+        if noWrongValue:
+            del wrongValuesCoordinates[label]
 
     return wrongValuesCoordinates
 
@@ -135,10 +146,11 @@ def printWrongValues(wrongValues, file=None):
     wrongValuesCounter = 0
 
     for label in wrongValues.keys():
-        output("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17, file)
+        output("\n" + "#" * 17 + f" wrong value(s) found in Label: {label}" + "#" * 17, file)
         output("#", file)
 
-        wrongValuesList = wrongValues.get(label)
+        wrongValuesList = [wrongValueCoordinates for wrongValueCoordinates in wrongValues.get(label)
+                           if wrongValueCoordinates is not None]
 
         for wrongValue in wrongValuesList:
             output(f"#   ######################   {label}", file)
@@ -168,6 +180,34 @@ def saveToTXT(dirPath, wrongValues):
         sys.exit(1)
 
 
+def saveToCSV(dirPath, wrongValues, colPairs):
+    try:
+        if os.path.isdir(dirPath):
+            filePath = dirPath + "/WrongValues.csv"
+            with open(filePath, "w", newline="") as file:
+                writer = csv.writer(file, delimiter=";")
+
+                writer.writerow([colName[0] for colName in colPairs])
+                writer.writerow([colName[1] for colName in colPairs])
+
+                sortedLabels = sorted(wrongValues.keys())
+                for label in sortedLabels:
+
+                    labelValues = []
+
+                    for value in wrongValues.get(label):
+                        if value is None:
+                            labelValues.append("")
+                        else:
+                            labelValues.append(value[1] + " <-> " + value[3])
+
+                    writer.writerow([label] + labelValues)
+
+    except Exception as e:
+        print(f"<<<<<<! ERROR: could not write as CSV: {e} !>>>>>>")
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="CSV comparator script - labels per row and have to be identical!")
     parser.add_argument("-f1", "--file1", type=str, required=True,
@@ -184,9 +224,10 @@ def main():
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str,
                         help="optional Values which can occur in the files and should be ignored " +
                              "while comparing (e.g. Null, NONE, "" or 9999)")
-    parser.add_argument("-s_txt", "--saveToTXT", type=str, help="path to save the console printout into a txt file")
-    parser.add_argument("-s_csv", "--saveToCSV", type=str, help="path to save the wrongValues as CSV output")
-    parser.add_argument("-dbg", "--printDebugLines", action="store_true")
+    parser.add_argument("-st", "--saveToTXT", type=str,
+                        help="path to directory in which the console printout gets saved into a txt file")
+    parser.add_argument("-sc", "--saveToCSV", type=str,
+                        help="path to a directory in which wrongValues gets saved as CSV file")
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
@@ -199,23 +240,13 @@ def main():
     else:
         ignoreValues = args.ignoreValues
 
-    if args.verbose:
-        print("\n#v# CSV loading successful")
-
-    if args.printDebugLines:
-        print("\n################################################ FILE 1 CONTENT ####################################################")
-        print(file1Content)
-        print("####################################################################################################################")
-
-        print("\n################################################ FILE 2 CONTENT ####################################################")
-        print(file2Content)
-        print("####################################################################################################################\n")
+    if args.verbose: print("\n#v# CSV loading successful")
 
     # saves the names of the columns in which the labels are stored in a
     # list (index 0 = colName File 1, index 1 0 colName File 2)
     labelColumnNames = splitPair(args.labelColumnNamePair)
 
-    ## check if labelListFile1 is subset of labelListFile2
+    # check if labelListFile1 is subset of labelListFile2
     labelSetFile1, labelDicFile1 = getLabelSetAndDic(labelColumnNames, 1, file1Content)
     labelSetFile2, labelDicFile2 = getLabelSetAndDic(labelColumnNames, 2, file2Content)
     labelIntersection = labelSetFile1 & labelSetFile2
@@ -232,7 +263,7 @@ def main():
     # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
     try:
         with open(args.columnNamePairs, "r") as colNamePairFile:
-            # only split and append if the line is not empty (last if checks if line is empty
+            # only split and append if the line is not empty (last if checks if line is empty)
             colPairs = [splitPair(pair.strip()) for pair in colNamePairFile if pair.strip()]
     except Exception as e:
         print(f"<<<<<<! An error occurred: {e} !>>>>>>")
@@ -244,8 +275,8 @@ def main():
     if args.verbose:
         print("\n#v# Column Name Dictionary's successfully loaded!")
 
-    wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1,
-                                labelDicFile2, colNameDicFile1, colNameDicFile2, ignoreValues)
+    wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2,
+                                colNameDicFile1, colNameDicFile2, ignoreValues)
 
     if not wrongValues:
         print("\n### all values are identical :D ###")
@@ -255,6 +286,9 @@ def main():
 
     if args.saveToTXT is not None:
         saveToTXT(args.saveToTXT, wrongValues)
+
+    if args.saveToCSV is not None:
+        saveToCSV(args.saveToCSV, wrongValues, [labelColumnNames] + colPairs)
 
 
 if __name__ == "__main__":
