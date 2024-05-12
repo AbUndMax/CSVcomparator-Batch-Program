@@ -22,6 +22,7 @@
 import csv
 import argparse
 import sys
+import os
 from typing import Tuple, List, Dict, Set
 
 
@@ -122,31 +123,49 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
     return wrongValuesCoordinates
 
 
+def output(string, file=None):
+    if file:
+        file.write(string + "\n")
+    else:
+        print(string)
+
+
 # prints all found wrong values one after another
-def printWrongValues(wrongValues):
+def printWrongValues(wrongValues, file=None):
     wrongValuesCounter = 0
 
     for label in wrongValues.keys():
-        print("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17)
-        print("#")
+        output("\n" + "#" * 17 + f" wrong value(s) found in Label: " + "#" * 17, file)
+        output("#", file)
 
         wrongValuesList = wrongValues.get(label)
 
         for wrongValue in wrongValuesList:
-            print(f"#   ######################   {label}")
-            print("#")
-            print("#   >File 1:")
-            print(f"#   \tcolumn Name: {wrongValue[0]}")
-            print(f"#   \t      value: {wrongValue[1]}")
-            print("#   >File 2:")
-            print(f"#   \tcolumn Name: {wrongValue[2]}")
-            print(f"#   \t      value: {wrongValue[3]}")
-            print("#")
+            output(f"#   ######################   {label}", file)
+            output("#", file)
+            output("#   >File 1:", file)
+            output(f"#   \tcolumn Name: {wrongValue[0]}", file)
+            output(f"#   \t      value: {wrongValue[1]}", file)
+            output("#   >File 2:", file)
+            output(f"#   \tcolumn Name: {wrongValue[2]}", file)
+            output(f"#   \t      value: {wrongValue[3]}", file)
+            output("#", file)
             wrongValuesCounter += 1
 
-        print("##################################################################")
+        output("##################################################################", file)
 
-    print(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n")
+    output(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n", file)
+
+
+def saveToTXT(dirPath, wrongValues):
+    try:
+        if os.path.isdir(dirPath):
+            filePath = dirPath + "/WrongValues.txt"
+            with open(filePath, "w") as file:
+                printWrongValues(wrongValues, file)
+    except Exception as e:
+        print(f"<<<<<<! ERROR: could not write as TXT: {e} !>>>>>>")
+        sys.exit(1)
 
 
 def main():
@@ -165,6 +184,8 @@ def main():
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str,
                         help="optional Values which can occur in the files and should be ignored " +
                              "while comparing (e.g. Null, NONE, "" or 9999)")
+    parser.add_argument("-s_txt", "--saveToTXT", type=str, help="path to save the console printout into a txt file")
+    parser.add_argument("-s_csv", "--saveToCSV", type=str, help="path to save the wrongValues as CSV output")
     parser.add_argument("-dbg", "--printDebugLines", action="store_true")
     parser.add_argument("-v", "--verbose", action="store_true")
 
@@ -231,6 +252,9 @@ def main():
     else:
         print("\n<<<<<<! there is at least one wrong value !>>>>>>")
         printWrongValues(wrongValues)
+
+    if args.saveToTXT is not None:
+        saveToTXT(args.saveToTXT, wrongValues)
 
 
 if __name__ == "__main__":
