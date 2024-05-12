@@ -19,8 +19,9 @@ There are 4 required parameters at startup and 3 optionals:
 
 #### Optional Parameters
 - `-iv`, `--ignoreValues`: Values to ignore during comparison (e.g., NONE, 9999, "").
-- `-dbg`, `--printDebugLines`: Prints the content of files after loading.
 - `-v`, `--verbose`: Provides confirmation after significant operations.
+- `-st`, `--saveToTXT`: path to **directory** in which .txt output should be saved.
+- `sc`. `--saveToCSV`: path to **directory** in which .csv output should be saved.
 
 ## Example
 ```bash 
