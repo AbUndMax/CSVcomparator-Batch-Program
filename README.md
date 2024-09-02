@@ -34,6 +34,7 @@ There are 4 required parameters at startup and 4 optionals:
 - If both are set, the script will use the `-cp` (specified pairs) parameter and expand its search by all found matching column names.
   
 ### Optional Parameters
+- `-ucn`, `--printUniqueColNames`: If this parameter is set, the script will print all column names that are unique to each file.
 - `-iv`, `--ignoreValues`: Values to ignore during comparison (e.g., NONE, 9999, "").
 - `-v`, `--verbose`: Provides confirmation after significant operations.
 - `-st`, `--saveToTXT`: path to **directory** in which .txt output should be saved.

@@ -142,6 +142,18 @@ def output(string, file=None):
         file.write(string + "\n")
     else:
         print(string)
+        
+        
+# print all unqie column names to the console
+def printUniqueColNames(uniqueColNamesFile1, uniqueColNamesFile2):
+    if uniqueColNamesFile1:
+        print("\n### The following columns are unique to file 1:")
+        for colName in uniqueColNamesFile1:
+            print("#", colName)
+    if uniqueColNamesFile2:
+        print("\n### The following columns are unique to file 2:")
+        for colName in uniqueColNamesFile2:
+            print("#", colName)
 
 
 # prints all found wrong values one after another
@@ -236,6 +248,7 @@ def main():
                              "\nthey are inputted in a .txt such that each pair is in one " +
                              "row: colNameFile1:::colNameFile2 nextPair nextPair ...")
     parser.add_argument("-acp", "--autoColumnPairs", action="store_true", help="The script will search automatically for identical named columns and include them into the comparison")
+    parser.add_argument("-ucn", "--printUniqueColNames", action="store_true", help="Print all unique column names to the console")
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str,
                         help="optional Values which can occur in the files and should be ignored " +
                              "while comparing (e.g. Null, NONE, "" or 9999)")
@@ -286,10 +299,18 @@ def main():
         except Exception as e:
             print(f"<<<<<<! An error occurred: {e} !>>>>>>")
             sys.exit(1)
+    
+    # find all unique column names in the files
+    if args.printUniqueColNames:
+        colNameSetFile1 = set(file1Content[0])
+        colNameSetFile2 = set(file2Content[0])
+        labelSet = set(labelColumnNames)
+        uniqueColNamesFile1 = colNameSetFile1 - colNameSetFile2 - labelSet
+        uniqueColNamesFile2 = colNameSetFile2 - colNameSetFile1 - labelSet
       
     # find all columns with the same name that are not already in the ColPairs list and do not occure in the LabelColumnNames
     # first check is to prevent the same column to be compared twice
-    # second check is to prevent the label columns to be compared
+    # second check is to prevent the label columns to be compared        
     if args.autoColumnPairs:
         for colName in file1Content[0]:
             if colName in file2Content[0] and colName not in labelColumnNames and [colName, colName] not in colPairs:
@@ -307,6 +328,9 @@ def main():
                                 colNameDicFile1, colNameDicFile2, ignoreValues)
 
     if args.verbose: print("\n#v# comparison of values successful!")
+    
+    if args.printUniqueColNames:
+        printUniqueColNames(uniqueColNamesFile1, uniqueColNamesFile2)
 
     if not wrongValues:
         print("\n### all values are identical :D ###")
