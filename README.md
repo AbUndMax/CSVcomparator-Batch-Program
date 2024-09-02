@@ -4,20 +4,36 @@ It will output all values and positions which are different in booth provided fi
 
 ### Assumptions
 - **Label Columns**: Both files must include a specific column that holds "labels" for each row (e.g., sample name). The labels in both files must match exactly.
-- **Column Mapping**: Users should know which column in File 1 corresponds to which in File 2 and provide this information in a separate .txt file. (see below)
+- **Column Mapping**: Users should know which column in File 1 corresponds to which in File 2 and provide this information in a separate .txt file as input. (see below)
+- **Automatic Column Mapping**: Optionally, if the column names are identical in both files, the script will automatically map them and compare their values.
 - **Handling of Empty Lines**: Empty lines are automatically handled by the script.
 - **Partial Matches**: If not all labels from File 1 are present in File 2, the script compares only the intersecting labels and notifies if any labels from File 1 are missing in File 2.
 
 ## How it works
 There are 4 required parameters at startup and 4 optionals:  
 
-#### Required Parameters
+### Required Parameters
 - `-f1`, `--file1`: Path to the first file.
 - `-f2`, `--file2`: Path to the second file.
 - `-lp`, `--labelColumnNamePairs`: Column names containing labels, formatted as `label1:::label2` (e.g., `labels:::sampleID`). Notice that label of file 1 is leading!
-- `-cp`, `--columnNamePairs`: A .txt file with names of column pairs that correspond to each other, formatted as `columnNameFile1:::columnNameFile2`. Notice that column of file 1 is leading!
+
+### Column name Parameters
+
+- `-cp`, `--columnNamePairs`: A .txt file with names of column pairs that correspond to each other, with each pair in one row: 
+    ```
+    columnNameFile1:::columnNameFile2
+    columnNameFile1:::columnNameFile2
+    columnNameFile1:::columnNameFile2
+    ...
+    ```
+    Notice that column of file 1 is leading!
+- `-acp`, `--autoColumnPairs`: If this parameter is set, the script will automatically map columns with identical names in both files.
+
+**Notice**: 
+- booth paraemters `-cp` and `-acp` are optional, but at least one of them must be set.
+- If both are set, the script will use the `-cp` (specified pairs) parameter and expand its search by all found matching column names.
   
-#### Optional Parameters
+### Optional Parameters
 - `-iv`, `--ignoreValues`: Values to ignore during comparison (e.g., NONE, 9999, "").
 - `-v`, `--verbose`: Provides confirmation after significant operations.
 - `-st`, `--saveToTXT`: path to **directory** in which .txt output should be saved.

@@ -18,13 +18,14 @@
 
 # The script is used with the following command:
 # python3 CSVsheetComparator.py
-# -f1 "pathToFile1"
-# -f2 "pathToFile2"
-# -lp colNameForLabelsFile1:::colNameForLabelFile2
-# -cp "pathToColumnPairs.txt"
-# -iv valuesToIgnore
-# -st "pathToDirectoryToSaveTXT"
-# -sc "pathToDirectoryToSaveCSV"
+# -f1  "pathToFile1"
+# -f2  "pathToFile2"
+# -lp  colNameForLabelsFile1:::colNameForLabelFile2
+# -cp  "pathToColumnPairs.txt"
+# -acp searches all identical column names and adds these columns to the comparison
+# -iv  valuesToIgnore
+# -st  "pathToDirectoryToSaveTXT"
+# -sc  "pathToDirectoryToSaveCSV"
 
 import csv
 import argparse
@@ -230,10 +231,11 @@ def main():
     parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True,
                         help="name of the columns in which the labels are stored " +
                              "\nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
-    parser.add_argument("-cp", "--columnNamePairs", type=str, required=True,
+    parser.add_argument("-cp", "--columnNamePairs", type=str,
                         help="all pairs of columns which should be compared " +
                              "\nthey are inputted in a .txt such that each pair is in one " +
                              "row: colNameFile1:::colNameFile2 nextPair nextPair ...")
+    parser.add_argument("-acp", "--autoColumnPairs", action="store_true", help="The script will search automatically for identical named columns and include them into the comparison")
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str,
                         help="optional Values which can occur in the files and should be ignored " +
                              "while comparing (e.g. Null, NONE, "" or 9999)")
@@ -244,6 +246,9 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true")
 
     args = parser.parse_args()
+    
+    if not args.columnNamePairs and not args.autoColumnPairs:
+        parser.error("Please provide either a column pair file to -cp/--columnNamePairs \n or use the -acp/--autoColumnPairs flag to compare all columns with the same name")
 
     file1Content = loadCSVcontent(args.file1)
     file2Content = loadCSVcontent(args.file2)
@@ -273,13 +278,23 @@ def main():
             sys.exit(1)
 
     # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
-    try:
-        with open(args.columnNamePairs, "r") as colNamePairFile:
-            # only split and append if the line is not empty (last if checks if line is empty)
-            colPairs = [splitPair(pair.strip()) for pair in colNamePairFile if pair.strip()]
-    except Exception as e:
-        print(f"<<<<<<! An error occurred: {e} !>>>>>>")
-        sys.exit(1)
+    if args.columnNamePairs:
+        try:
+            with open(args.columnNamePairs, "r") as colNamePairFile:
+                # only split and append if the line is not empty (last if checks if line is empty)
+                colPairs = [splitPair(pair.strip()) for pair in colNamePairFile if pair.strip()]
+        except Exception as e:
+            print(f"<<<<<<! An error occurred: {e} !>>>>>>")
+            sys.exit(1)
+      
+    # find all columns with the same name that are not already in the ColPairs list and do not occure in the LabelColumnNames
+    # first check is to prevent the same column to be compared twice
+    # second check is to prevent the label columns to be compared
+    if args.autoColumnPairs:
+        for colName in file1Content[0]:
+            if colName in file2Content[0] and colName not in labelColumnNames and [colName, colName] not in colPairs:
+                colPairs.append([colName, colName])
+        
 
     if args.verbose: print("\n#v# column pairs successfully loaded!")
 
