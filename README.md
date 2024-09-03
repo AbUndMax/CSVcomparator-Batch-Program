@@ -18,6 +18,15 @@ It will output all values and positions which are different in booth provided fi
 - **List Unique Columns**: The script can list all columns that are unique for each file.
 - **Output Formats**: The script prints the differences to the console and can save them as a .txt or .csv file.
 
+## Installation
+The script is a cli Tool:
+- **UNIX executable**: The script provided in the latest release as an runnable for UNIX (macOS & Linux) system.  
+Make the file executable  
+`chmod +x CSVcomparator.sh`  
+and run it with  
+`./CSVcomparator.sh`.
+- **Python script**: The script can be run on any system with Python 3.6 or higher installed. Download the CSVcomparator.py file and run it with `python CSVcomparator.py` in the folder where the file is located.
+
 ## Prerequisites
 - **Label Columns**: Both files must include a specific column that holds "labels" for each row (e.g., sample name). For the values of a label to be compared, the labels must be identical in both files.
 - **Column Name Pairs**: Users should know which column in File 1 corresponds to which in File 2 and provide this information in a separate .txt file (see below) as input to specify which columns should be compared.
