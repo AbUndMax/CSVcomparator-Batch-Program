@@ -1,13 +1,26 @@
+[![GitHub](https://img.shields.io/badge/GitHub-CSVcomparator-blue?logo=github)](https://github.com/AbUndMax/CSVcomparator-Batch-Program)
+[![License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/AbUndMax/CSVcomparator-Batch-Program/blob/main/LICENSE.md)
+[![Java](https://img.shields.io/badge/Python-3.6+-blue?logo=python)](https://openjdk.org/projects/jdk/11/)
+[![Badge](https://img.shields.io/github/v/release/AbUndMax/Java_ArgsParser?color=brightgreen)](https://github.com/AbUndMax/CSVcomparator-Batch-Program/releases/latest)
+
+
 # CSV comparing batch program
 This script was written in the purpose of comparing two CSV files for identity.
+It first searches all matching row names (refferred to as labels) and then compares the values of the specified columns for all matching labels.
 It will output all values and positions which are different in booth provided files.
 
-### Assumptions
-- **Label Columns**: Both files must include a specific column that holds "labels" for each row (e.g., sample name). The labels in both files must match exactly.
-- **Column Mapping**: Users should know which column in File 1 corresponds to which in File 2 and provide this information in a separate .txt file as input. (see below)
-- **Automatic Column Mapping**: Optionally, if the column names are identical in both files, the script will automatically map them and compare their values.
+## Features
+- **Column Mapping**: Users can specify which columns should be compared.
+- **Automatic Column Mapping**: If the column names are identical in both files, the script can automatically map them and compare their values.
 - **Handling of Empty Lines**: Empty lines are automatically handled by the script.
 - **Partial Matches**: If not all labels from File 1 are present in File 2, the script compares only the intersecting labels and notifies if any labels from File 1 are missing in File 2.
+- **Ignoring Values**: Users can specify values to ignore during comparison.
+- **List Unique Columns**: The script can list all columns that are unique for each file.
+- **Output Formats**: The script prints the differences to the console and can save them as a .txt or .csv file.
+
+## Prerequisites
+- **Label Columns**: Both files must include a specific column that holds "labels" for each row (e.g., sample name). For the values of a label to be compared, the labels must be identical in both files.
+- **Column Name Pairs**: Users should know which column in File 1 corresponds to which in File 2 and provide this information in a separate .txt file (see below) as input to specify which columns should be compared.
 
 ## How it works
 There are 4 required parameters at startup and 4 optionals:  

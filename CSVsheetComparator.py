@@ -23,9 +23,15 @@
 # -lp  colNameForLabelsFile1:::colNameForLabelFile2
 # -cp  "pathToColumnPairs.txt"
 # -acp searches all identical column names and adds these columns to the comparison
+# -ucn prints all unique column names to the console
 # -iv  valuesToIgnore
 # -st  "pathToDirectoryToSaveTXT"
 # -sc  "pathToDirectoryToSaveCSV"
+
+# COPYRIGHT © 2024 Niklas Max G.
+# This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+# More details at: https://github.com/AbUndMax/CSVcomparator-Batch-Program/blob/main/LICENSE.md
+# For a quick overview, visit https://creativecommons.org/licenses/by-nc/4.0/
 
 import csv
 import argparse
