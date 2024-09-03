@@ -1,5 +1,5 @@
 [![GitHub](https://img.shields.io/badge/GitHub-CSVcomparator-blue?logo=github)](https://github.com/AbUndMax/CSVcomparator-Batch-Program)
-[![License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/AbUndMax/CSVcomparator-Batch-Program/blob/main/LICENSE.md)
+[![License](https://img.shields.io/badge/License-CC_BY--NC_4.0-blue)](https://github.com/AbUndMax/CSVcomparator-Batch-Program/blob/main/LICENSE.md)
 [![Java](https://img.shields.io/badge/Python-3.6+-blue?logo=python)](https://openjdk.org/projects/jdk/11/)
 [![Badge](https://img.shields.io/github/v/release/AbUndMax/Java_ArgsParser?color=brightgreen)](https://github.com/AbUndMax/CSVcomparator-Batch-Program/releases/latest)
 
