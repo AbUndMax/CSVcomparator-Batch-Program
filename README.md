@@ -29,7 +29,7 @@ CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
 - **Ignoring Values**: Users can specify values to ignore during comparison.
 - **List Unique Columns**: The script can list all columns that are unique for each file.
 - **Find unique labels**: Report labels that are unique for one file.
-- **Report repetitive labels** Labels that exist more than one time in a file are reported with index.
+- **Report repetitive labels:** Labels that exist more than one time in a file are reported with index.
 - **Variable delimiter**: The script can handle different delimiters (",", "|", "\t", deafualt: ";").
 - **Output Formats**: The script prints the differences to the console and can save them as a .txt or .csv file.
 
