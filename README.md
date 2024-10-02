@@ -38,7 +38,7 @@ CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
 - **Column Name Pairs**: Users should know which column in File 1 corresponds to which in File 2 and provide this information in a separate .txt file (see below) as input to specify which columns should be compared.
 
 ## How it works
-There are 4 required parameters at startup and 4 optionals:  
+There are 3 required parameters, 3 modes that can be combined and several optionals:  
 
 ### Required Parameters
 - `-f1`, `--file1`: Path to the first file.
