@@ -10,6 +10,7 @@ It first searches all matching row names (refferred to as labels) and then compa
 It will output all values and positions which are different in booth provided files.
 
 ## Features
+- **variable delimiter**: The script can handle different delimiters (",", "|", "\t", deafualt: ";").
 - **Column Mapping**: Users can specify which columns should be compared.
 - **Automatic Column Mapping**: If the column names are identical in both files, the script can automatically map them and compare their values.
 - **Handling of Empty Lines**: Empty lines are automatically handled by the script.
@@ -39,7 +40,7 @@ There are 4 required parameters at startup and 4 optionals:
 - `-f2`, `--file2`: Path to the second file.
 - `-lp`, `--labelColumnNamePairs`: Column names containing labels, formatted as `label1:::label2` (e.g., `labels:::sampleID`). Notice that label of file 1 is leading!
 
-### Column name Parameters
+### Modes
 
 - `-cp`, `--columnNamePairs`: A .txt file with names of column pairs that correspond to each other, with each pair in one row: 
     ```
@@ -50,15 +51,18 @@ There are 4 required parameters at startup and 4 optionals:
     ```
     Notice that column of file 1 is leading!
 - `-acp`, `--autoColumnPairs`: If this parameter is set, the script will automatically map columns with identical names in both files.
+- `-lc`, `--labelComparison`: With this parameter, the script will additionally compare the labels of both files and print out the labels that are unique to each file. 
 
 **Notice**: 
-- booth paraemters `-cp` and `-acp` are optional, but at least one of them must be set.
-- If both are set, the script will use the `-cp` (specified pairs) parameter and expand its search by all found matching column names.
+- all three paraemters `-cp`, `-acp` and `-lc` are optional, but at least one of them must be set.
+- If `-cp` and `-acp` are set, the script will use the `-cp` (specified pairs) parameter and expand its search by all found matching column names.
+- `-lc`can be combined with all other modes.
   
 ### Optional Parameters
 - `-ucn`, `--printUniqueColNames`: If this parameter is set, the script will print all column names that are unique to each file.
 - `-iv`, `--ignoreValues`: Values to ignore during comparison (e.g., NONE, 9999, "").
 - `-v`, `--verbose`: Provides confirmation after significant operations.
+- `-d`, `--delimiter`: Delimiter used in the CSV files (e.g., ",", "|", "\t"), default: ";".
 - `-st`, `--saveToTXT`: path to **directory** in which .txt output should be saved.
 - `-sc`. `--saveToCSV`: path to **directory** in which .csv output should be saved.
   

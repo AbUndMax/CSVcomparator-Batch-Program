@@ -49,12 +49,12 @@ from typing import Tuple, List, Dict, Set
 
 
 # loads the given csv file into a matrix
-def loadCSVcontent(path) -> List[List[str]]:
+def loadCSVcontent(path, delimiter) -> List[List[str]]:
     content = []
     try:
         # open first file
         with open(path, newline="", encoding="UTF-8-sig") as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=";")
+            csvreader = csv.reader(csvfile, delimiter=delimiter)
             for row in csvreader:
                 if any(field.strip() for field in row):  # checks rather row is empty or not
                     content.append(row)
@@ -297,6 +297,8 @@ def main():
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str,
                         help="optional Values which can occur in the files and should be ignored " +
                              "while comparing (e.g. Null, NONE, "" or 9999)")
+    parser.add_argument("-d", "--delimiter", type=str, default=";",
+                        help="delimiter used in the csv files (default is ';') use instead: ',' '|' or '\\t'")
     parser.add_argument("-st", "--saveToTXT", type=str,
                         help="path to directory in which the console printout gets saved into a txt file")
     parser.add_argument("-sc", "--saveToCSV", type=str,
@@ -313,9 +315,12 @@ def main():
         parser.error("\n > Please provide either a column pair file to -cp/--columnNamePairs" + 
                      "\n > use the -acp/--autoColumnPairs flag to compare all columns with the same name" + 
                      "\n > or use the -lc/--labelComparison flag to compare the labels of the two files")
+        
+    if args.delimiter not in [",", ";", "|", "\t"]:
+        parser.error("\n > The delimiter has to be one of the following: ',' ';' '|' or '\\t'")
 
-    file1Content = loadCSVcontent(args.file1)
-    file2Content = loadCSVcontent(args.file2)
+    file1Content = loadCSVcontent(args.file1, args.delimiter)
+    file2Content = loadCSVcontent(args.file2, args.delimiter)
 
     if args.ignoreValues is None:
         ignoreValues = []
