@@ -16,13 +16,20 @@
 # It is also possible to save the console output to a .txt or writing the wrong values found to a csv file
 # by providing a path to a directory in which the files should be saved as arguments to -st and -sc.
 
-# The script is used with the following command:
+# The script is used with the following commands:
 # python3 CSVsheetComparator.py
+
+# required:
 # -f1  "pathToFile1"
 # -f2  "pathToFile2"
 # -lp  colNameForLabelsFile1:::colNameForLabelFile2
+
+# modes:
+# -lc  compares the labels of the two files & reports unique labels of each file
 # -cp  "pathToColumnPairs.txt"
 # -acp searches all identical column names and adds these columns to the comparison
+
+# optionals:
 # -ucn prints all unique column names to the console
 # -iv  valuesToIgnore
 # -st  "pathToDirectoryToSaveTXT"
@@ -65,8 +72,9 @@ def splitPair(pair) -> List[str]:
     return pair.split(sep=":::")
 
 
-# returns labelList and dic of {label: index of label in fileContent}
-def getLabelSetAndDic(labelColumnNames, fileNumber, content) -> Tuple[Set[str], Dict[str, int]]:
+# returns lset of all labels of file <fileNumber>
+# and a dictionary of {label: index of label in fileContent} (index of label in fileContent starts at 1)
+def getLabelSetAndIndexDic(labelColumnNames, fileNumber, content) -> Tuple[Set[str], Dict[str, int]]:
     columnNameForLabel = labelColumnNames[fileNumber - 1]
     try:
         labelColIndex = content[0].index(columnNameForLabel)
@@ -148,6 +156,28 @@ def output(string, file=None):
         file.write(string + "\n")
     else:
         print(string)
+        
+        
+# print all unqiue labels to the console
+def printUniqueLabels(unique_labels_file1, unique_labels_file2):
+    if not unique_labels_file1 and not unique_labels_file2:
+        print("\n### All labels are contained in both files ###")
+    else:
+        if unique_labels_file1:
+            print("\n### The following labels are unique to file 1:")
+            for label in unique_labels_file1:
+                print("#", label)
+        else:
+            print("\n### All labels in file 1 contained in file 2")
+        if unique_labels_file2:
+            print("\n### The following labels are unique to file 2:")
+            for label in unique_labels_file2:
+                print("#", label)
+        else:
+            print("\n### All labels in file 2 contained in file 1")
+        
+        print("\n<<<<<! Some labels are unique either for File1 or for File2 !>>>>>>")
+        print("> see above or scroll up to see details!")
         
         
 # print all unqie column names to the console
@@ -242,6 +272,8 @@ def saveToCSV(dirPath, wrongValues, colPairs):
 
 def main():
     parser = argparse.ArgumentParser(description="CSV comparator script - labels per row and have to be identical!")
+    
+    # required arguments:
     parser.add_argument("-f1", "--file1", type=str, required=True,
                         help="Path of the file which gets compared to the second one")
     parser.add_argument("-f2", "--file2", type=str, required=True,
@@ -249,11 +281,18 @@ def main():
     parser.add_argument("-lp", "--labelColumnNamePair", type=str, required=True,
                         help="name of the columns in which the labels are stored " +
                              "\nthey are inputted in the way: colNameForLabelsFile1:::colNameForLabelFile2")
+   
+    # modes:
+    parser.add_argument("-lc", "--labelComparison", action="store_true",
+                        help="compares the labels of the two files & reports unique labels of each file")
     parser.add_argument("-cp", "--columnNamePairs", type=str,
                         help="all pairs of columns which should be compared " +
                              "\nthey are inputted in a .txt such that each pair is in one " +
                              "row: colNameFile1:::colNameFile2 nextPair nextPair ...")
-    parser.add_argument("-acp", "--autoColumnPairs", action="store_true", help="The script will search automatically for identical named columns and include them into the comparison")
+    parser.add_argument("-acp", "--autoColumnPairs", action="store_true", 
+                        help="The script will search automatically for identical named columns and include them into the comparison")
+   
+    # optionals:
     parser.add_argument("-ucn", "--printUniqueColNames", action="store_true", help="Print all unique column names to the console")
     parser.add_argument("-iv", "--ignoreValues", nargs="+", type=str,
                         help="optional Values which can occur in the files and should be ignored " +
@@ -266,8 +305,14 @@ def main():
 
     args = parser.parse_args()
     
-    if not args.columnNamePairs and not args.autoColumnPairs:
-        parser.error("Please provide either a column pair file to -cp/--columnNamePairs \n or use the -acp/--autoColumnPairs flag to compare all columns with the same name")
+    autoPairMode = args.autoColumnPairs
+    columnNamePairMode = args.columnNamePairs
+    labelComparisonMode = args.labelComparison
+    
+    if not columnNamePairMode and not autoPairMode and not labelComparisonMode:
+        parser.error("\n > Please provide either a column pair file to -cp/--columnNamePairs" + 
+                     "\n > use the -acp/--autoColumnPairs flag to compare all columns with the same name" + 
+                     "\n > or use the -lc/--labelComparison flag to compare the labels of the two files")
 
     file1Content = loadCSVcontent(args.file1)
     file2Content = loadCSVcontent(args.file2)
@@ -280,26 +325,38 @@ def main():
     if args.verbose: print("\n#v# CSV loading successful")
 
     # saves the names of the columns in which the labels are stored in a
-    # list (index 0 = colName File 1, index 1 0 colName File 2)
+    # list (index 0 = colName of labels in File 1, 
+    #       index 1 = colName of labels in File 2)
     labelColumnNames = splitPair(args.labelColumnNamePair)
 
     # check if labelListFile1 is subset of labelListFile2
-    labelSetFile1, labelDicFile1 = getLabelSetAndDic(labelColumnNames, 1, file1Content)
-    labelSetFile2, labelDicFile2 = getLabelSetAndDic(labelColumnNames, 2, file2Content)
-    labelIntersection = labelSetFile1 & labelSetFile2
-
-    if args.verbose: print("\n#v# Label Sets & Label Dictionary's loaded! - Label Intersection created")
-
-    if labelSetFile1 != labelIntersection:
-        print("<<<<<<! some of the labels in File1 may not exist in File2 !>>>>>>")
-        userInput = input("do you want to continue either way? (y/n)\n")
+    labelSetFile1, labelIndexDicFile1 = getLabelSetAndIndexDic(labelColumnNames, 1, file1Content)
+    labelSetFile2, labelIndexDicFile2 = getLabelSetAndIndexDic(labelColumnNames, 2, file2Content)
+    
+    unique_labels_file1 = labelSetFile1 - labelSetFile2
+    unique_labels_file2 = labelSetFile2 - labelSetFile1
+    
+    if (labelComparisonMode):
+            printUniqueLabels(unique_labels_file1, unique_labels_file2)
+            if not columnNamePairMode and not autoPairMode: # end script if only label comparison mode is used
+                sys.exit(0)
+        
+    if unique_labels_file1 or unique_labels_file2:
+        if not labelComparisonMode:
+            print("\n<<<<<<! Some labels are unique either for File1 or for File2 !>>>>>>")
+            print("> You may want to check the differences with the -lc flag")
+        userInput = input("\n> do you want to continue either way? (y/n)\n")
         if userInput != "y":
-            sys.exit(1)
+            sys.exit(0)
 
+    labelIntersection = labelSetFile1 & labelSetFile2
+    if args.verbose: print("\n#v# Label Sets & Label Dictionary's loaded! - Label Intersection created")
+    
     # save all pairs in a colPairs Matrix [[colNameFile1, colNameFile2] [colNameFile1, colNameFile2], ...]
-    if args.columnNamePairs:
+    colPairs = []
+    if columnNamePairMode:
         try:
-            with open(args.columnNamePairs, "r") as colNamePairFile:
+            with open(columnNamePairMode, "r") as colNamePairFile:
                 # only split and append if the line is not empty (last if checks if line is empty)
                 colPairs = [splitPair(pair.strip()) for pair in colNamePairFile if pair.strip()]
         except Exception as e:
@@ -317,7 +374,7 @@ def main():
     # find all columns with the same name that are not already in the ColPairs list and do not occure in the LabelColumnNames
     # first check is to prevent the same column to be compared twice
     # second check is to prevent the label columns to be compared        
-    if args.autoColumnPairs:
+    if autoPairMode:
         for colName in file1Content[0]:
             if colName in file2Content[0] and colName not in labelColumnNames and [colName, colName] not in colPairs:
                 colPairs.append([colName, colName])
@@ -330,7 +387,7 @@ def main():
 
     if args.verbose: print("\n#v# Column Name Dictionary's successfully loaded!")
 
-    wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelDicFile1, labelDicFile2,
+    wrongValues = compareValues(colPairs, labelIntersection, file1Content, file2Content, labelIndexDicFile1, labelIndexDicFile2,
                                 colNameDicFile1, colNameDicFile2, ignoreValues)
 
     if args.verbose: print("\n#v# comparison of values successful!")
