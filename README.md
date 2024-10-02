@@ -9,6 +9,18 @@ This script was written in the purpose of comparing two CSV files for identity.
 It first searches all matching row names (refferred to as labels) and then compares the values of the specified columns for all matching labels.
 It will output all values and positions which are different in booth provided files.
 
+## intsall
+Download the wheel from [latest release](https://github.com/AbUndMax/CSVcomparator-Batch-Program/releases/latest) and install the script with pip:
+```bash
+pip install CSVcomparator-x.x.whl
+```
+replace `x.x` with the version number of the downloaded wheel.
+
+then run with;
+```bash
+CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
+```
+
 ## Features
 - **variable delimiter**: The script can handle different delimiters (",", "|", "\t", deafualt: ";").
 - **Column Mapping**: Users can specify which columns should be compared.
