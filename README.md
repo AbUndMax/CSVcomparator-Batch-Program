@@ -51,12 +51,12 @@ There are 4 required parameters at startup and 4 optionals:
     ```
     Notice that column of file 1 is leading!
 - `-acp`, `--autoColumnPairs`: If this parameter is set, the script will automatically map columns with identical names in both files.
-- `-lc`, `--labelComparison`: With this parameter, the script will additionally compare the labels of both files and print out the labels that are unique to each file. 
+- `-lc`, `--labelComparison`: With this parameter, the script will compare the labels of both files and print out the labels that are unique to each file. 
 
 **Notice**: 
-- all three paraemters `-cp`, `-acp` and `-lc` are optional, but at least one of them must be set.
+- all three parameters `-cp`, `-acp` and `-lc` are optional, but at least one of them must be set.
 - If `-cp` and `-acp` are set, the script will use the `-cp` (specified pairs) parameter and expand its search by all found matching column names.
-- `-lc`can be combined with all other modes.
+- `-lc`can be combined with all other modes, or used alone.
   
 ### Optional Parameters
 - `-ucn`, `--printUniqueColNames`: If this parameter is set, the script will print all column names that are unique to each file.

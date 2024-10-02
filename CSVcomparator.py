@@ -159,20 +159,20 @@ def output(string, file=None):
         
         
 # print all unqiue labels to the console
-def printUniqueLabels(unique_labels_file1, unique_labels_file2):
+def printUniqueLabels(unique_labels_file1, indexDicFile1, unique_labels_file2, indesxDicFile2):
     if not unique_labels_file1 and not unique_labels_file2:
         print("\n### All labels are contained in both files ###")
     else:
         if unique_labels_file1:
             print("\n### The following labels are unique to file 1:")
             for label in unique_labels_file1:
-                print("#", label)
+                print("#", label, " in row: ", indexDicFile1.get(label))
         else:
             print("\n### All labels in file 1 contained in file 2")
         if unique_labels_file2:
             print("\n### The following labels are unique to file 2:")
             for label in unique_labels_file2:
-                print("#", label)
+                print("#", label, " in row: ", indesxDicFile2.get(label))
         else:
             print("\n### All labels in file 2 contained in file 1")
         
@@ -342,7 +342,7 @@ def main():
     unique_labels_file2 = labelSetFile2 - labelSetFile1
     
     if (labelComparisonMode):
-            printUniqueLabels(unique_labels_file1, unique_labels_file2)
+            printUniqueLabels(unique_labels_file1, labelIndexDicFile1, unique_labels_file2, labelIndexDicFile2)
             if not columnNamePairMode and not autoPairMode: # end script if only label comparison mode is used
                 sys.exit(0)
         
