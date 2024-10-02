@@ -30,6 +30,7 @@
 # -acp searches all identical column names and adds these columns to the comparison
 
 # optionals:
+# -d  delimiter (default is ";") use instead: "," "|" or "\t"
 # -ucn prints all unique column names to the console
 # -iv  valuesToIgnore
 # -st  "pathToDirectoryToSaveTXT"
@@ -74,17 +75,28 @@ def splitPair(pair) -> List[str]:
 
 # returns lset of all labels of file <fileNumber>
 # and a dictionary of {label: index of label in fileContent} (index of label in fileContent starts at 1)
-def getLabelSetAndIndexDic(labelColumnNames, fileNumber, content) -> Tuple[Set[str], Dict[str, int]]:
+def getLabelSetAndIndexDic(labelColumnNames, fileNumber, content) -> Tuple[Set[str], Dict[str, int], Dict[str, List[int]]]:
     columnNameForLabel = labelColumnNames[fileNumber - 1]
     try:
         labelColIndex = content[0].index(columnNameForLabel)
         # A List of all labels WITHOUT the colName of the LabelCol
-        labelList = [row[labelColIndex] for row in content[1:]]
-        labelDic = {}
-        for index, label in enumerate(labelList):
-            labelDic.update({label: index + 1})  # +1 because the colName is index 0 which is missing in the label list
+        labelList = []
+        seen = set()
+        labelIndexDic = {}
+        duplicates = {}
+        for index, row in enumerate(content[1:], start=1): # start = 1 because first row (header) is excluded
+            label = row[labelColIndex]
+            if label not in seen:
+                labelList.append(label)
+                labelIndexDic.update({label: index})
+                seen.add(label)
+            elif label in duplicates:
+                duplicates[label].append(index)
+            else:
+                duplicates[label] = [index]
+                
 
-        return set(labelList), labelDic
+        return set(labelList), labelIndexDic, duplicates
 
     except ValueError:
         print(f"<<<<<<! {columnNameForLabel} is not contained in file {fileNumber} !>>>>>>")
@@ -148,48 +160,70 @@ def compareValues(colPairs, labelIntersection, file1Content, file2Content, label
             del wrongValuesCoordinates[label]
 
     return wrongValuesCoordinates
-
-
-# prints the given string to the console or to a file
-def output(string, file=None):
-    if file:
-        file.write(string + "\n")
-    else:
-        print(string)
         
+        
+# prints all duplicates to the console
+def printDuplicatesIfExist(duplicatesFile1, duplicatesFile2):
+    head = "\n" + "#" * 17 + " Duplicates " + "#" * 17
+    print(head)
+    if duplicatesFile1:
+        print("#\n### The following labels occured multiple times in file 1:")
+        for label, rows in duplicatesFile1.items():
+            print("#", label, " in row: ", ", ".join(map(str, rows)))
+    if duplicatesFile2:
+        print("#\n### The following labels occured multiple times in file 2:")
+        for label, rows in duplicatesFile2.items():
+            print("#", label, " in row: ", ", ".join(map(str, rows)))
+    print("#\n" + "#" * len(head))
+    
         
 # print all unqiue labels to the console
 def printUniqueLabels(unique_labels_file1, indexDicFile1, unique_labels_file2, indesxDicFile2):
     if not unique_labels_file1 and not unique_labels_file2:
         print("\n### All labels are contained in both files ###")
     else:
+        head = "\n" + "#" * 17 + " Unique Labels " + "#" * 17
+        print(head)
         if unique_labels_file1:
-            print("\n### The following labels are unique to file 1:")
+            print("#\n### The following labels are unique to file 1:")
             for label in unique_labels_file1:
                 print("#", label, " in row: ", indexDicFile1.get(label))
         else:
-            print("\n### All labels in file 1 contained in file 2")
+            print("#\n### All labels in file 1 contained in file 2")
         if unique_labels_file2:
-            print("\n### The following labels are unique to file 2:")
+            print("#\n### The following labels are unique to file 2:")
             for label in unique_labels_file2:
                 print("#", label, " in row: ", indesxDicFile2.get(label))
         else:
             print("\n### All labels in file 2 contained in file 1")
+        print("#\n" + "#" * len(head))
         
         print("\n<<<<<! Some labels are unique either for File1 or for File2 !>>>>>>")
-        print("> see above or scroll up to see details!")
+        print("> see above / scroll up to see details!")
         
         
 # print all unqie column names to the console
 def printUniqueColNames(uniqueColNamesFile1, uniqueColNamesFile2):
+    if uniqueColNamesFile1 or uniqueColNamesFile2:
+        head = "\n" + "#" * 17 + " Unique Column Names " + "#" * 17
+        print(head)
     if uniqueColNamesFile1:
-        print("\n### The following columns are unique to file 1:")
+        print("#\n### The following columns are unique to file 1:")
         for colName in uniqueColNamesFile1:
             print("#", colName)
     if uniqueColNamesFile2:
-        print("\n### The following columns are unique to file 2:")
+        print("#\n### The following columns are unique to file 2:")
         for colName in uniqueColNamesFile2:
             print("#", colName)
+        print("#\n" + "#" * len(head))
+            
+            
+# prints the given string to the console or to a file
+def output(string, file=None):
+    if file:
+        file.write(string + "\n")
+    else:
+        print(string)
 
 
 # prints all found wrong values one after another
@@ -197,7 +231,7 @@ def printWrongValues(wrongValues, file=None):
     wrongValuesCounter = 0
 
     for label in wrongValues.keys():
-        output("\n" + "#" * 17 + f" wrong value(s) found in Label: {label}" + "#" * 17, file)
+        output("\n" + "v" * 17 + f" wrong value(s) found in Label: {label}" + "v" * 17, file)
         output("#", file)
 
         wrongValuesList = [wrongValueCoordinates for wrongValueCoordinates in wrongValues.get(label)
@@ -335,8 +369,17 @@ def main():
     labelColumnNames = splitPair(args.labelColumnNamePair)
 
     # check if labelListFile1 is subset of labelListFile2
-    labelSetFile1, labelIndexDicFile1 = getLabelSetAndIndexDic(labelColumnNames, 1, file1Content)
-    labelSetFile2, labelIndexDicFile2 = getLabelSetAndIndexDic(labelColumnNames, 2, file2Content)
+    labelSetFile1, labelIndexDicFile1, labelDuplicatesFile1 = getLabelSetAndIndexDic(labelColumnNames, 1, file1Content)
+    labelSetFile2, labelIndexDicFile2,  labelDuplicatesFile2 = getLabelSetAndIndexDic(labelColumnNames, 2, file2Content)
+    
+    if labelDuplicatesFile1 or labelDuplicatesFile2:
+        printDuplicatesIfExist(labelDuplicatesFile1, labelDuplicatesFile2)
+        print("\n<<<<<<! There are repetitive labels !>>>>>>")
+        print("> see above / scroll up to see details!")
+        print("> If you proceed with the comparison, the first occurrence of the label will be used!")
+        continueEvenWithDuplicates = input("\n> do you want to continue either way? (y/n)\n")
+        if continueEvenWithDuplicates != "y":
+            sys.exit(0)
     
     unique_labels_file1 = labelSetFile1 - labelSetFile2
     unique_labels_file2 = labelSetFile2 - labelSetFile1
