@@ -9,18 +9,6 @@ This script was written in the purpose of comparing two CSV files for identity.
 It first searches all matching row names (refferred to as labels) and then compares the values of the specified columns for all matching labels.
 It will output all values and positions which are different in booth provided files.
 
-## intsall
-Download the wheel from [latest release](https://github.com/AbUndMax/CSVcomparator-Batch-Program/releases/latest) and install the script with pip:
-```bash
-pip install CSVcomparator-x.x.whl
-```
-replace `x.x` with the version number of the downloaded wheel.
-
-then run with;
-```bash
-CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
-```
-
 ## Features
 - **Column Mapping**: Users can specify which columns should be compared.
 - **Automatic Column Mapping**: If the column names are identical in both files, the script can automatically map them and compare their values.
@@ -34,13 +22,16 @@ CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
 - **Output Formats**: The script prints the differences to the console and can save them as a .txt or .csv file.
 
 ## Installation
-The script is a cli Tool:
-- **UNIX executable**: The script provided in the latest release as an runnable for UNIX (macOS & Linux) system.  
-Make the file executable  
-`chmod +x CSVcomparator.sh`  
-and run it with  
-`./CSVcomparator.sh`.
-- **Python script**: The script can be run on any system with Python 3.6 or higher installed. Download the CSVcomparator.py file and run it with `python CSVcomparator.py` in the folder where the file is located.
+Download the wheel from [latest release](https://github.com/AbUndMax/CSVcomparator-Batch-Program/releases/latest) and install the script with pip:
+```bash
+pip install CSVcomparator-x.x.whl
+```
+replace `x.x` with the version number of the downloaded wheel.
+
+then run with;
+```bash
+CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
+```
 
 ## Prerequisites
 - **Label Columns**: Both files must include a specific column that holds "labels" for each row (e.g., sample name). For the values of a label to be compared, the labels must be identical in both files.
