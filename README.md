@@ -22,13 +22,15 @@ CSVcomparator <file1> <file2> <labelColumnPairs> <mode> [options]
 ```
 
 ## Features
-- **variable delimiter**: The script can handle different delimiters (",", "|", "\t", deafualt: ";").
 - **Column Mapping**: Users can specify which columns should be compared.
 - **Automatic Column Mapping**: If the column names are identical in both files, the script can automatically map them and compare their values.
 - **Handling of Empty Lines**: Empty lines are automatically handled by the script.
 - **Partial Matches**: If not all labels from File 1 are present in File 2, the script compares only the intersecting labels and notifies if any labels from File 1 are missing in File 2.
 - **Ignoring Values**: Users can specify values to ignore during comparison.
 - **List Unique Columns**: The script can list all columns that are unique for each file.
+- **Find unique labels**: Report labels that are unique for one file.
+- **Report repetitive labels** Labels that exist more than one time in a file are reported with index.
+- **Variable delimiter**: The script can handle different delimiters (",", "|", "\t", deafualt: ";").
 - **Output Formats**: The script prints the differences to the console and can save them as a .txt or .csv file.
 
 ## Installation
