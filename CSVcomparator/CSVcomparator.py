@@ -231,7 +231,8 @@ def printWrongValues(wrongValues, file=None):
     wrongValuesCounter = 0
 
     for label in wrongValues.keys():
-        output("\n" + "v" * 17 + f" wrong value(s) found in Label: {label}" + "v" * 17, file)
+        header = "\n" + "#" * 17 + f" wrong value(s) found in Label: {label} " + "#" * 17
+        output(header, file)
         output("#", file)
 
         wrongValuesList = [wrongValueCoordinates for wrongValueCoordinates in wrongValues.get(label)
@@ -249,7 +250,7 @@ def printWrongValues(wrongValues, file=None):
             output("#", file)
             wrongValuesCounter += 1
 
-        output("##################################################################", file)
+        output("#" * len(header), file)
 
     output(f"\n>> there is a total of {wrongValuesCounter} wrong Values\n", file)
 
