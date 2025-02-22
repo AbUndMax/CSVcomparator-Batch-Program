@@ -53,16 +53,31 @@ from typing import Tuple, List, Dict, Set
 def loadCSVcontent(path, delimiter) -> List[List[str]]:
     content = []
     try:
-        # open first file
-        with open(path, newline="", encoding="UTF-8-sig") as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=delimiter)
-            for row in csvreader:
-                if any(field.strip() for field in row):  # checks rather row is empty or not
-                    content.append(row)
+        # open file
+        with open(path, "rb") as file:
+            for i, row in enumerate(file):
+                decoded_row = row.decode("UTF-8")
+                if not decoded_row == "":
+                    split_row = decoded_row.split(delimiter)
+                    content.append(split_row)
         return content
+    
     except FileNotFoundError:
         print(f"<<<<<<! the file {path} could not be found !>>>>>>")
         sys.exit(1)
+        
+    except UnicodeDecodeError:
+        split_row = row.split(delimiter.encode("UTF-8"))
+        for j, cell in enumerate(split_row):
+                        try:
+                            cell.decode("UTF-8")
+                        except UnicodeDecodeError:
+                            cell_content = cell.decode("UTF-8", errors="replace")
+                            print(f"<<<<<<! Decode Error in File: {path.split('/')[-1]} !>>>>>>")
+                            print(f"Error byte in row {i+1}, column {j+1}")
+                            print(f"cell content: {cell_content}")
+                            sys.exit(1)
+                            
     except Exception as e:
         print(f"<<<<<<! An error occurred: {e} !>>>>>>")
         sys.exit(1)
