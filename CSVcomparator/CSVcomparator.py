@@ -51,44 +51,62 @@ from typing import Tuple, List, Dict, Set
 
 # loads the given csv file into a matrix
 def loadCSVcontent(path, delimiter) -> List[List[str]]:
-    content = []
+    content = [] # is a matrix that resembles the csv table.
     try:
         # open file
         with open(path, "rb") as file:
+            rowsWithError = [] # contains all row indices that contain a decode error
             for i, row in enumerate(file):
-                decoded_row = row.decode("UTF-8")
-                if not decoded_row == "":
+                decoded_row = row.decode("UTF-8", errors="replace")
+                
+                if not decoded_row == "": # if row is empty, we don't save it
+                    if decoded_row.count("�") > 0:
+                        rowsWithError.append(i)
+                
                     split_row = decoded_row.split(delimiter)
                     content.append(split_row)
+                    
+        if (numberOfErrors := len(rowsWithError)) > 0:
+            print(f"<<<<<<! {numberOfErrors} decode error(s) in File: {path.split('/')[-1]} !>>>>>>")
+            listAllDecodeErrorPositions(content, rowsWithError)
+            if input("\n> Do you want to continue the file comparison with the '�' replacement? y/n\n") not in ["yes", "y"]:
+                sys.exit(1)
+        
+                    
         return content
     
     except FileNotFoundError:
         print(f"<<<<<<! the file {path} could not be found !>>>>>>")
-        sys.exit(1)
-        
-    except UnicodeDecodeError:
-        split_row = row.split(delimiter.encode("UTF-8"))
-        for j, cell in enumerate(split_row):
-                        try:
-                            cell.decode("UTF-8")
-                        except UnicodeDecodeError:
-                            cell_content = cell.decode("UTF-8", errors="replace")
-                            print(f"<<<<<<! Decode Error in File: {path.split('/')[-1]} !>>>>>>")
-                            print(f"Error byte in row {i+1}, column {j+1}")
-                            print(f"cell content: {cell_content}")
-                            sys.exit(1)
-                            
+        sys.exit(1)         
     except Exception as e:
         print(f"<<<<<<! An error occurred: {e} !>>>>>>")
         sys.exit(1)
+        
 
+# prints out all row and col number in whoch decoding problems accoured
+def listAllDecodeErrorPositions(content, rowsWithError):
+    print("   row   |   col   |   content of effected cell")
+    for i in rowsWithError:
+        for j, cell in enumerate(content[i]):
+            if "�" in cell:
+                print(f"{center(9, i)}|{center(9, j)}|{center(27, cell)}")
+                
+
+# centers the value 
+def center(space, insert):
+    insert = str(insert)
+    total_padding = space - len(insert)
+    left_padding = (total_padding // 2) + (total_padding % 2)  # Rechts mehr Platz
+    right_padding = total_padding // 2
+    return " " * left_padding + insert + " " * right_padding
+            
 
 # splits a columnNamePair (between "":::"")
 def splitPair(pair) -> List[str]:
     return pair.split(sep=":::")
 
 
-# returns lset of all labels of file <fileNumber>
+# returns set of all labels of file <fileNumber>
 # and a dictionary of {label: index of label in fileContent} (index of label in fileContent starts at 1)
 def getLabelSetAndIndexDic(labelColumnNames, fileNumber, content) -> Tuple[Set[str], Dict[str, int], Dict[str, List[int]]]:
     columnNameForLabel = labelColumnNames[fileNumber - 1]
@@ -114,7 +132,7 @@ def getLabelSetAndIndexDic(labelColumnNames, fileNumber, content) -> Tuple[Set[s
         return set(labelList), labelIndexDic, duplicates
 
     except ValueError:
-        print(f"<<<<<<! {columnNameForLabel} is not contained in file {fileNumber} !>>>>>>")
+        print(f"<<<<<<! Column name: '{columnNameForLabel}' in file {fileNumber} cannot be found !>>>>>>")
         sys.exit(1)
 
 
