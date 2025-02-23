@@ -145,3 +145,4 @@ CSVcomparator.spec
 .idea
 setup.py
 __init__.py
+/test
